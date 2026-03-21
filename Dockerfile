@@ -20,14 +20,16 @@ RUN apk update && apk add --no-cache ffmpeg font-noto
 
 COPY --from=app-builder /usr/app/dist ./dist
 
-COPY templates     ./templates
-COPY .yarnrc.yml   ./
-COPY package.json  ./
-COPY tsconfig.json ./
-COPY yarn.lock     ./
+COPY templates            ./templates
+COPY .yarnrc.yml          ./
+COPY docker-entrypoint.sh ./
+COPY package.json         ./
+COPY tsconfig.json        ./
+COPY yarn.lock            ./
+
+RUN chmod +x /usr/app/docker-entrypoint.sh
 
 RUN corepack enable
-
 RUN yarn workspaces focus --production
 
-ENTRYPOINT [ "node", "dist/main" ]
+ENTRYPOINT [ "/usr/app/docker-entrypoint.sh" ]

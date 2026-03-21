@@ -206,3 +206,13 @@ async function startPolling() {
 }
 
 startPolling()
+
+function exit(signal: string) {
+  logger.log('App', `${signal} signal received`)
+  stopRecord()
+  logger.log('App', 'Exit...')
+  process.exit(0)
+}
+
+process.on('SIGTERM', exit)
+process.on('SIGINT', exit)
