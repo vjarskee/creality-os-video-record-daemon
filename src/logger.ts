@@ -12,14 +12,17 @@ class Logger {
   }
 
   log(context: string, message: string) {
+    // eslint-disable-next-line no-console
     console.log(this.format('info', context, message))
   }
 
   error(context: string, message: string) {
+    // eslint-disable-next-line no-console
     console.error(this.format('error', context, message))
   }
 
   warn(context: string, message: string) {
+    // eslint-disable-next-line no-console
     console.warn(this.format('warn', context, message))
   }
 }

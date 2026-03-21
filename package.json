@@ -16,7 +16,9 @@
     "url": "git+https://github.com/vjarskee/creality-os-video-record-daemon.git"
   },
   "scripts": {
-    "build": "tsc"
+    "build": "tsc",
+    "lint:prettier": "prettier --check --config .prettierrc ./src",
+    "lint:eslint": "eslint"
   },
   "dependencies": {
     "mustache": "^4.2.0"
