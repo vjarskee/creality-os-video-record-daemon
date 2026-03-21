@@ -29,7 +29,7 @@ docker build . --tag creality-os-video-record-daemon
 docker run \
   --detach \
   --volume *your_videos_directory_path*:/usr/app/output:rw \
-  --env HOST=*your_printer_ip_or_hostname*
+  --env HOST=*your_printer_ip_or_hostname* \
   creality-os-video-record-daemon
 ```
 
