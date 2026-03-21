@@ -1,0 +1,33 @@
+{
+  "name": "creality-os-video-record-daemon",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "homepage": "https://github.com/vjarskee/creality-os-video-record-daemon",
+  "bugs": {
+    "url": "https://github.com/vjarskee/creality-os-video-record-daemon/issues"
+  },
+  "license": "MIT",
+  "author": {
+    "name": "vjarskee"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vjarskee/creality-os-video-record-daemon.git"
+  },
+  "scripts": {
+    "build": "tsc"
+  },
+  "dependencies": {
+    "mustache": "^4.2.0"
+  },
+  "devDependencies": {
+    "@types/mustache": "^4.2.6",
+    "@types/node": "^25.5.0",
+    "eslint": "^10.0.3",
+    "prettier": "^3.8.1",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.57.1"
+  },
+  "packageManager": "yarn@4.13.0"
+}
