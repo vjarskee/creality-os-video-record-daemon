@@ -1,0 +1,31 @@
+name: Lint
+run-name: Lint
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-slim
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v6
+
+      - name: Setup node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22.17.0
+
+      - name: Install dependencies
+        run: yarn install
+
+      - name: Prettier
+        if: always()
+        run: yarn lint:prettier
+
+      - name: ESLint
+        if: always()
+        run: yarn lint:eslint
