@@ -1,5 +1,5 @@
 import { spawn, type ChildProcessWithoutNullStreams } from 'child_process'
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs'
+import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from 'fs'
 import mustache from 'mustache'
 import { resolve } from 'path'
 import { parseArgs } from 'util'
@@ -56,38 +56,47 @@ function startRecord() {
   logger.log('App', 'Start record')
   isRecording = true
 
-  ffmpegProccess = spawn('ffmpeg', [
-    '-hide_banner',
-    '-i',
-    `http://${args.host}:8080/?action=stream`,
-    '-vf',
-    `drawtext=textfile=overlay:reload=1:fontcolor=white:fontsize=24:borderw=3:bordercolor=black:x=10:y=10`,
+  const drawtextOpts = Object.entries({
+    textfile: 'overlay',
+    reload: 1,
+    fontcolor: 'white',
+    fontsize: 24,
+    borderw: 3,
+    bordercolor: 'black',
+    x: 10,
+    y: 10
+  })
+    .map(([key, value]) => `${key}=${value}`)
+    .join(':')
+
+  const ffmpegArgs = ['-hide_banner']
+  ffmpegArgs.push('-i', `http://${args.host}:8080/?action=stream`)
+  ffmpegArgs.push('-vf', `drawtext=${drawtextOpts}`)
+  ffmpegArgs.push(
     `output/${new Date()
       .toLocaleString()
       .replace(/[^a-zA-Z0-9]/g, '_')
       .toLowerCase()}.mp4`
-  ])
+  )
 
-  ffmpegProccess.stderr.on('data', data => {
-    logger.log('FFmpeg', data)
-  })
-
-  ffmpegProccess.stdout.on('data', data => {
-    logger.log('FFmpeg', data)
-  })
-
-  ffmpegProccess.on('close', code => {
-    logger.log('FFmpeg', `Closed with ${code} code`)
-  })
+  ffmpegProccess = spawn('ffmpeg', ffmpegArgs)
+  ffmpegProccess.stderr.on('data', data => logger.log('FFmpeg', data))
+  ffmpegProccess.stdout.on('data', data => logger.log('FFmpeg', data))
+  ffmpegProccess.on('close', code => logger.log('FFmpeg', `Closed with ${code} code`))
 }
 
-function stopRecord() {
+async function stopRecord() {
   if (!isRecording) return
 
   logger.log('App', 'Stop record')
   isRecording = false
 
-  if (ffmpegProccess) ffmpegProccess.stdin.write('q')
+  if (ffmpegProccess) {
+    await new Promise(resolve => {
+      ffmpegProccess!.on('close', resolve)
+      ffmpegProccess!.kill('SIGINT')
+    })
+  }
 
   data.TotalLayer = refData.TotalLayer
   data.bedTemp0 = refData.bedTemp0
@@ -151,27 +160,31 @@ async function bootstrap() {
 
       if (isRecording) {
         writeFileSync(
-          './overlay',
-          mustache.render(readFileSync(resolve(process.cwd(), 'templates/txt_output.mustache'), 'utf8'), {
-            layer: data.layer,
-            total_layer: data.TotalLayer,
-            current_position_x: currentPosition.x,
-            current_position_y: currentPosition.y,
-            current_position_z: currentPosition.z,
-            nozzle_temp: Number(data.nozzleTemp).toFixed(2),
-            target_nozzle_temp: data.targetNozzleTemp,
-            bed_temp: Number(data.bedTemp0).toFixed(2),
-            target_bed_temp: data.targetBedTemp0,
-            print_file_name: parseFilename(data.printFileName),
-            print_job_time: parseSeconds(data.printJobTime),
-            print_left_time: parseSeconds(data.printLeftTime),
-            print_start_date: new Date(data.printStartTime * 1000).toLocaleString(),
-            print_end_date: new Date(
-              (data.printStartTime + data.printJobTime + data.printLeftTime) * 1000
-            ).toLocaleString(),
-            print_progress: data.printProgress
-          })
+          './overlay.tmp',
+          mustache
+            .render(readFileSync(resolve(process.cwd(), 'templates/txt_output.mustache'), 'utf8'), {
+              layer: data.layer,
+              total_layer: data.TotalLayer,
+              current_position_x: currentPosition.x,
+              current_position_y: currentPosition.y,
+              current_position_z: currentPosition.z,
+              nozzle_temp: Number(data.nozzleTemp).toFixed(2),
+              target_nozzle_temp: data.targetNozzleTemp,
+              bed_temp: Number(data.bedTemp0).toFixed(2),
+              target_bed_temp: data.targetBedTemp0,
+              print_file_name: parseFilename(data.printFileName),
+              print_job_time: parseSeconds(data.printJobTime),
+              print_left_time: parseSeconds(data.printLeftTime),
+              print_start_date: new Date(data.printStartTime * 1000).toLocaleString(),
+              print_end_date: new Date(
+                (data.printStartTime + data.printJobTime + data.printLeftTime) * 1000
+              ).toLocaleString(),
+              print_progress: data.printProgress
+            })
+            .replace(/\r\n/g, '\r')
+            .replace(/\n/g, '\r')
         )
+        renameSync('./overlay.tmp', 'overlay')
       }
     } catch (err) {
       logger.error('App', `Invalid JSON: ${err}`)
@@ -207,9 +220,9 @@ async function startPolling() {
 
 startPolling()
 
-function exit(signal: string) {
+async function exit(signal: string) {
   logger.log('App', `${signal} signal received`)
-  stopRecord()
+  await stopRecord()
   logger.log('App', 'Exit...')
   process.exit(0)
 }
