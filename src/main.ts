@@ -98,18 +98,7 @@ async function stopRecord() {
     })
   }
 
-  data.TotalLayer = refData.TotalLayer
-  data.bedTemp0 = refData.bedTemp0
-  data.curPosition = refData.curPosition
-  data.layer = refData.layer
-  data.nozzleTemp = refData.nozzleTemp
-  data.printFileName = refData.printFileName
-  data.printJobTime = refData.printJobTime
-  data.printLeftTime = refData.printLeftTime
-  data.printProgress = refData.printProgress
-  data.printStartTime = refData.printStartTime
-  data.targetBedTemp0 = refData.targetBedTemp0
-  data.targetNozzleTemp = refData.targetNozzleTemp
+  Object.assign(data, refData)
 
   writeFileSync('./overlay', '', 'utf8')
 }
@@ -143,18 +132,7 @@ async function bootstrap() {
         else stopRecord()
       }
 
-      if (msg.TotalLayer !== undefined) data.TotalLayer = msg.TotalLayer
-      if (msg.bedTemp0 !== undefined) data.bedTemp0 = msg.bedTemp0
-      if (msg.curPosition !== undefined) data.curPosition = msg.curPosition
-      if (msg.layer !== undefined) data.layer = msg.layer
-      if (msg.nozzleTemp !== undefined) data.nozzleTemp = msg.nozzleTemp
-      if (msg.printFileName !== undefined) data.printFileName = msg.printFileName
-      if (msg.printJobTime !== undefined) data.printJobTime = msg.printJobTime
-      if (msg.printLeftTime !== undefined) data.printLeftTime = msg.printLeftTime
-      if (msg.printProgress !== undefined) data.printProgress = msg.printProgress
-      if (msg.printStartTime !== undefined) data.printStartTime = msg.printStartTime
-      if (msg.targetBedTemp0 !== undefined) data.targetBedTemp0 = msg.targetBedTemp0
-      if (msg.targetNozzleTemp !== undefined) data.targetNozzleTemp = msg.targetNozzleTemp
+      Object.assign(data, msg)
 
       const currentPosition = parsePosition(data.curPosition)
 
